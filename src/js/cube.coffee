@@ -1,10 +1,11 @@
-define ["three", "underscore"], (THREE, _) ->
+define ["text_renderer", "three", "underscore"], (renderText, THREE, _) ->
     class Cube
         constructor: (options) ->
             options or (options = {})
             _.defaults options,
                 size: 4,
                 cubeSize: 1,
+                numberSize : 0.8
                 cubeSpacing: 0.2
                 color: 0x87cefa
                 opacity: 0.9
@@ -21,6 +22,18 @@ define ["three", "underscore"], (THREE, _) ->
             @mainScene.matrixAutoUpdate = true
             cubeGeometry = new THREE.BoxGeometry(options.cubeSize,options.cubeSize,options.cubeSize)
             cubeMaterial = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacity, transparent: true)
+            numberGeometry = new THREE.PlaneGeometry(options.numberSize,options.numberSize)
+            @numberMaterials = do ->
+                cache = {}
+                clearMaterial = new THREE.MeshBasicMaterial(transparent: true, opacity: 0)
+                get: (num) ->
+                    return clearMaterial unless num
+                    num = ""+num
+                    return cache[num] if num of cache
+                    texture = renderText(num)
+                    material = new THREE.SpriteMaterial(map: texture)
+                    cache[num] = material
+                    return material
             for i in [0...options.size]
                 for j in [0...options.size]
                     for k in [0...options.size]
@@ -28,8 +41,9 @@ define ["three", "underscore"], (THREE, _) ->
                         cube.position.set (i-1.5)*(options.cubeSize+options.cubeSpacing),
                             (j-1.5)*(options.cubeSize+options.cubeSpacing),
                             (k-1.5)*(options.cubeSize+options.cubeSpacing)
+                        number = new THREE.Mesh(numberGeometry, @numberMaterials.get(1)
+                        cube.add(number)
                         @mainScene.add(cube)
-        
         next: (dir) ->
             iterators =
                 1: (row, col, depth) ->
