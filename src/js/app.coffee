@@ -43,7 +43,7 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
                 @camera.updateProjectionMatrix()
             $(window).trigger("resize")
 
-            @cube = new Cube(cameraPos: @camera.position)
+            @cube = new Cube(cameraPos: @camera.position, camera: @camera)
             window.cube = @cube
             @scene.add(@cube.mainScene)
         loop: ->
