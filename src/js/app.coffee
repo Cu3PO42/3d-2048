@@ -7,15 +7,15 @@ define ["cube", "three","stats", "jquery", "underscore"], (Cube, THREE, Stats, $
                 cameraNear: 1
                 cameraFar: 1000
                 container: "#container",
-                cameraPos: [0,0,-10]
+                cameraPos: [0,0,10]
             @options = options
             @container = $(options.container)
             @scene = new THREE.Scene()
             @stats = new Stats()
-            $(@stats.domElement).addClass('stats')
-            @container.appendChild(@stats.domElement)
+            @container.append(@stats.domElement)
             @clock = new THREE.Clock()
             @renderer = new THREE.WebGLRenderer()
+            @container.append(@renderer.domElement)
             @camera = new THREE.PerspectiveCamera(options.cameraFocal, 1, options.cameraNear, options.cameraFar)
             @camera.position.set.apply(@camera.position, options.cameraPos)
             @scene.add(@camera)

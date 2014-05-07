@@ -7,20 +7,20 @@ define ["three", "underscore"], (THREE, _) ->
                 cubeSize: 1,
                 cubeSpacing: 0.2
             @state = []
-            for i in [1..size]
+            for i in [1..options.size]
                 @state.push([])
                 last_1d = @state[@state.length-1]
-                for j in [1..size]
+                for j in [1..options.size]
                     last_1d.push([])
                     last_2d = last_1d[last_1d.length-1]
-                    for k in [1..size]
+                    for k in [1..options.size]
                         last_2d.push(0)
             @mainScene = new THREE.Scene()
             cubeGeometry = new THREE.BoxGeometry(options.cubeSize,options.cubeSize,options.cubeSize)
             cubeMaterial = new THREE.MeshBasicMaterial({color: 0xffffff})
-            for i in [0...size]
-                for j in [0...size]
-                    for k in [0...size]
+            for i in [0...options.size]
+                for j in [0...options.size]
+                    for k in [0...options.size]
                         cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
                         cube.position.set (i-1.5)*(options.cubeSize+options.cubeSpacing),
                             (j-1.5)*(options.cubeSize+options.cubeSpacing),
