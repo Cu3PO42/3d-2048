@@ -8,9 +8,11 @@ define ["underscore","three"], (_,THREE) ->
             size: 30
             font: "Times Roman"
             color: "#ff0000"
-        id = {text: text, font: options.font, color: options.color}
+        id = JSON.stringify({text: text, font: options.font, color: options.color})
+        console.log("render text called")
         return cache[id] if id of cache
         canvas = document.createElement('canvas')
+        $("#container").append(canvas)
         context = canvas.getContext('2d')
         context.font = "#{options.size}px #{options.font}"
         metrics = context.measureText(text)
