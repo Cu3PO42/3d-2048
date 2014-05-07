@@ -16,6 +16,7 @@ define ["three", "underscore"], (THREE, _) ->
                     for k in [1..options.size]
                         last_2d.push(0)
             @mainScene = new THREE.Scene()
+            @mainScene.matrixAutoUpdate = true
             cubeGeometry = new THREE.BoxGeometry(options.cubeSize,options.cubeSize,options.cubeSize)
             cubeMaterial = new THREE.MeshBasicMaterial({color: 0xffffff})
             for i in [0...options.size]
