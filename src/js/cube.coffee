@@ -28,7 +28,7 @@ define ["text_renderer", "three", "underscore"], (renderText, THREE, _) ->
             cubeMaterial = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacity, transparent: true)
             @numberMaterials = do ->
                 cache = {}
-                clearMaterial = new THREE.MeshBasicMaterial(transparent: false, opacity: 1, color: 0)
+                clearMaterial = new THREE.MeshPhongMaterial(map: renderText(0), transparent: true, opacity: 0, color: 0)
                 get: (num) ->
                     return clearMaterial unless num
                     num = ""+num
@@ -44,32 +44,32 @@ define ["text_renderer", "three", "underscore"], (renderText, THREE, _) ->
                         cube.position.set (i-1.5)*(options.cubeSize+options.cubeSpacing),
                             (j-1.5)*(options.cubeSize+options.cubeSpacing),
                             (k-1.5)*(options.cubeSize+options.cubeSpacing)
-                        r = Math.round((Math.random() * 10) + 1)
-                        number = new THREE.Mesh(numberGeometry,@numberMaterials.get(2**r))
+                        number = new THREE.Mesh(numberGeometry,@numberMaterials.get(0))
                         number.lookAt(options.cameraPos)
                         cube.add(number)
                         @numbers.push(number)
                         @mainScene.add(cube)
         next: (dir) ->
+            state = @state
             iterators =
                 1: (row, col, depth) ->
-                    get: -> @state[row][col][depth]
-                    set: (val) -> @state[row][col][depth] = val
+                    get: -> state[row][col][depth]
+                    set: (val) -> state[row][col][depth] = val
                 2: (row, col, depth) ->
-                    get: -> @state[row][col][@state.length - depth]
-                    set: (val) -> @state[row][col][@state.length - depth] = val
+                    get: -> state[row][col][state.length - 1 - depth]
+                    set: (val) -> state[row][col][state.length - 1 - depth] = val
                 3: (row, col, depth) ->
-                    get: -> @state[row][depth][col]
-                    set: (val) -> @state[row][depth][col] = val
+                    get: -> state[row][depth][col]
+                    set: (val) -> state[row][depth][col] = val
                 4: (row, col, depth) ->
-                    get: -> @state[row][@state.length - depth][col]
-                    get: -> @state[row][@state.length - depth][col] = val
+                    get: -> state[row][state.length - 1 - depth][col]
+                    get: -> state[row][state.length - 1 - depth][col] = val
                 5: (row, col, depth) ->
-                    get: -> @state[depth][col][row]
-                    set: (val) -> @state[depth][col][row] = val
+                    get: -> state[depth][col][row]
+                    set: (val) -> state[depth][col][row] = val
                 6: (row, col, depth) ->
-                    get: -> @state[@state.length - depth][col][row]
-                    set: -> @state[@state.length - depth][col][row] = val
+                    get: -> state[state.length - 1 - depth][col][row]
+                    set: -> state[state.length - 1 - depth][col][row] = val
             iter = iterators[dir]
             for i in [0...@state.length]
                 for j in [0...@state.length]
@@ -78,7 +78,7 @@ define ["text_renderer", "three", "underscore"], (renderText, THREE, _) ->
                     else
                         first_available = 1
                     for k in [1...@state.length]
-                        it = iterators(i,j,k)
+                        it = iter(i,j,k)
                         if it.get() != 0
                             if first_available and iter(i,k,first_available-1).get() == it.get()
                                 iter(i,k,first_available-1).set(it.get() * 2)
@@ -87,7 +87,12 @@ define ["text_renderer", "three", "underscore"], (renderText, THREE, _) ->
                                 iter(i,j,first_available).set(it.get())
                                 first_available += 1
                                 it.set(0)
-        
+            for i in [0...@state.length]
+                for j in [0...@state.length]
+                    for k in [0...@state.length]
+                        @updateVisualNumber(i,j,k)
+            return undefined
+
         rotate: (rotateX,rotateY) ->
             @mainScene.rotation.x += rotateX
             @mainScene.rotation.y += rotateY
@@ -100,3 +105,25 @@ define ["text_renderer", "three", "underscore"], (renderText, THREE, _) ->
             for number in @numbers
                 number.up = up
                 number.lookAt(vector)
+
+        addNumber: ->
+            num = 2 * (1+(Math.random() > 0.8))
+            freeFields = []
+            for i in [0...@state.length]
+                for j in [0...@state.length]
+                    for k in [0...@state.length]
+                        if @state[i][j][k] == 0
+                            freeFields.push([i,j,k])
+            if freeFields
+                rand = Math.floor(Math.random() * freeFields.length)
+                rand-- if rand == @state.length
+                rand = freeFields[rand]
+            else
+                alert("Game over!")
+            @state[rand[0]][rand[1]][rand[2]] = num
+            @updateVisualNumber.apply(this, rand)
+
+        updateVisualNumber: (i,j,k) ->
+            visualNum = @numbers[i*@state.length*@state.length+j*@state.length+k]
+            visualNum.material = @numberMaterials.get(@state[i][j][k])
+

@@ -44,6 +44,7 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
             $(window).trigger("resize")
 
             @cube = new Cube(cameraPos: @camera.position)
+            window.cube = @cube
             @scene.add(@cube.mainScene)
         loop: ->
             @stats.begin()

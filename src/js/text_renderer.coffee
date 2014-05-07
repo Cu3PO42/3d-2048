@@ -9,7 +9,6 @@ define ["underscore","three"], (_,THREE) ->
             font: "Times Roman"
             color: "#ff0000"
         id = JSON.stringify({text: text, font: options.font, color: options.color})
-        console.log("render text called")
         return cache[id] if id of cache
         canvas = document.createElement('canvas')
         $("#container").append(canvas)
