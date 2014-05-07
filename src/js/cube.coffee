@@ -6,6 +6,8 @@ define ["three", "underscore"], (THREE, _) ->
                 size: 4,
                 cubeSize: 1,
                 cubeSpacing: 0.2
+                color: 0x87cefa
+                opacity: 0.9
             @state = []
             for i in [1..options.size]
                 @state.push([])
@@ -18,7 +20,7 @@ define ["three", "underscore"], (THREE, _) ->
             @mainScene = new THREE.Scene()
             @mainScene.matrixAutoUpdate = true
             cubeGeometry = new THREE.BoxGeometry(options.cubeSize,options.cubeSize,options.cubeSize)
-            cubeMaterial = new THREE.MeshBasicMaterial({color: 0xffffff})
+            cubeMaterial = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacity, transparent: true)
             for i in [0...options.size]
                 for j in [0...options.size]
                     for k in [0...options.size]

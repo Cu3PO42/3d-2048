@@ -8,7 +8,19 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
                 cameraFar: 1000
                 container: "#container",
                 cameraPos: [0,0,10],
-                rotationSpeed: 1
+                rotationSpeed: 1,
+                lights: [
+                    {
+                        pos: [0,-5, 10],
+                        color: 0xffffff,
+                        intensity: 0.2
+                    }
+                    {
+                        pos: [0,5, 10],
+                        color: 0xffffff,
+                        intensity: 0.2
+                    }
+                ]
             @options = options
             @container = $(options.container)
             @scene = new THREE.Scene()
@@ -20,6 +32,11 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
             @camera = new THREE.PerspectiveCamera(options.cameraFocal, 1, options.cameraNear, options.cameraFar)
             @camera.position.set.apply(@camera.position, options.cameraPos)
             @scene.add(@camera)
+            for light in options.lights
+                tmp = new THREE.DirectionalLight(light.color, light.intensity)
+                tmp.position.set.apply(tmp.position, light.pos)
+                @scene.add(tmp)
+            @scene.add(new THREE.AmbientLight(0xaaaaaa))
             $(window).on "resize", =>
                 @camera.aspect = @container.width() / @container.height()
                 @renderer.setSize(@container.width(), @container.height())
