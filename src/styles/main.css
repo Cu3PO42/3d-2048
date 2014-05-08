@@ -25,6 +25,24 @@ body {
     position: absolute;
     width: 100%;
 }
+#score {
+    font: 2em Helvetica;
+    color: #67C7E2;
+    margin-top: .5em;
+    margin-left:.5em;
+    text-align: left;
+    position: absolute;
+}
+
+.unselectable { 
+        -moz-user-select: none; 
+        -khtml-user-select: none; 
+        -webkit-user-select: none; 
+        -o-user-select: none; 
+
+        -ms-user-select: none; 
+        user-select: none; 
+}
 
 #container {
     background: black url("../images/BgHD.jpg");

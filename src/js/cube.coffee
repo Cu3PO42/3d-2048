@@ -26,6 +26,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                     "2048":0x990099
                     "4096":0xFFFFFF
                     
+            @score = 0
             @options = options
             @state = []
             @gameover = false
@@ -186,6 +187,8 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                             else if before == current
                                 iter(i,j,beforeIndex+1).set(0)
                                 iter(i,j,beforeIndex).set(current * 2)
+                                @score += (current * 2)
+                                $("#score").text("Score : #{@score}")
                                 border = beforeIndex + 1
                                 change = true
                             else
@@ -228,7 +231,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                 @state[rand[0]][rand[1]][rand[2]] = num
                 @updateVisualNumber.apply(this, rand)
             else
-                alert("Game over!")
+                $("#gameover").show()
                 @gameover = true
             return undefined
 

@@ -25,9 +25,10 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
                 ]
             @options = options
             @container = $(options.container)
+            $("#gameover").hide()
             @scene = new THREE.Scene()
             @stats = new Stats()
-            @container.append(@stats.domElement)
+            #@container.append(@stats.domElement)
             @clock = new THREE.Clock()
             @renderer = new THREE.WebGLRenderer(alpha: true)
             @container.append(@renderer.domElement)
