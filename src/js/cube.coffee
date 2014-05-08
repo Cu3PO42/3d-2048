@@ -11,13 +11,23 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                 opacity: 0.2
                 opacityEmpty: 0.05
                 cameraPos: new THREE.Vector3(-10,0,0)
-                numberColors: 
-                    "2": "red"
-                    "4": "blue"
-                    "8": "green"
-                    "16": "yellow"
+                colors:
+                    "2": 0xE8BF19
+                    "4":0xE68A2E
+                    "8":0xA34242
+                    "16":0xE62E00
+                    "32":0xB82E00
+                    "64":0xE60000
+                    "128":0x00FF00
+                    "256":0x00A300
+                    "512":0x00B85C
+                    "1024":0x009999
+                    "2048":0x990099
+                    "4096":0xFFFFFF
+                    
             @options = options
             @state = []
+            @gameover = false
             for i in [1..options.size]
                 @state.push([])
                 last_1d = @state[@state.length-1]
@@ -31,8 +41,12 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
             @numbers = []
             numberGeometry = new THREE.PlaneGeometry(options.numberSize, options.numberSize)
             cubeGeometry = new THREE.BoxGeometry(options.cubeSize,options.cubeSize,options.cubeSize)
-            @cubeMaterial = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacity, transparent: true)
-            @cubeMaterialEmpty = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacityEmpty, transparent: true)
+            cubeMaterials = {"0": new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacityEmpty, transparent: true)}
+            for num, color of options.colors
+                cubeMaterials[num] = new THREE.MeshPhongMaterial(color: color, opacity: options.opacity, transparent: true)
+            cubeMaterialDefault = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacity, transparent: true)
+            @getCubeMaterials = (num) ->
+                cubeMaterials[num] or cubeMaterialDefault
             @numberMaterials = do ->
                 cache = {}
                 clearMaterial = new THREE.MeshPhongMaterial(map: renderText(0), transparent: true, opacity: 0, color: 0)
@@ -40,7 +54,10 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                     return clearMaterial unless num
                     num = ""+num
                     return cache[num] if num of cache
-                    texture = renderText(num,{color:options.numberColors[num]})
+                    colorCode = options.colors[num].toString(16)
+                    while colorCode.length < 6
+                        colorCode = "0"  + colorCode
+                    texture = renderText(num,{color:"##{colorCode}"})
                     material = new THREE.MeshPhongMaterial(map: texture,alphaTest:0.5, color: 0xffffff, useScreenCoordinates: true)
                     cache[num] = material
                     return material
@@ -48,7 +65,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
             for i in [0...options.size]
                 for j in [0...options.size]
                     for k in [0...options.size]
-                        cube = new THREE.Mesh(cubeGeometry, @cubeMaterialEmpty)
+                        cube = new THREE.Mesh(cubeGeometry, @getCubeMaterials(0))
                         cube.position.set (i-1.5)*(options.cubeSize+options.cubeSpacing),
                             (j-1.5)*(options.cubeSize+options.cubeSpacing),
                             (k-1.5)*(options.cubeSize+options.cubeSpacing)
@@ -121,6 +138,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
 
 
         next: (dir) ->
+            return if @gameover
             state = @state
             iterators =
                 0: (row, col, depth) ->
@@ -142,6 +160,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                     get: -> state[state.length - 1 - depth][col][row]
                     set: (val) -> state[state.length - 1 - depth][col][row] = val
             iter = iterators[dir]
+            change = false
             for i in [0...@state.length]
                 for j in [0...@state.length]
                     for k in [1...@state.length]
@@ -156,10 +175,12 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                                 iter(i,j,beforeIndex).set(current)
                                 iter(i,j,beforeIndex+1).set(0)
                                 beforeIndex--
+                                change = true
                             else if before == current
                                 iter(i,j,beforeIndex+1).set(0)
                                 iter(i,j,beforeIndex).set(current * 2)
                                 border = beforeIndex + 1
+                                change = true
                             else
                                 break
 
@@ -167,8 +188,9 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                 for j in [0...@state.length]
                     for k in [0...@state.length]
                         @updateVisualNumber(i,j,k)
-            @addNumber()
-            @addNumber()
+            if change
+                @addNumber()
+                @addNumber()
             return undefined
 
         rotate: (rotateX,rotateY) ->
@@ -192,20 +214,21 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                     for k in [0...@state.length]
                         if @state[i][j][k] == 0
                             freeFields.push([i,j,k])
-            if freeFields
+            if freeFields.length
                 rand = Math.floor(Math.random() * freeFields.length)
                 rand-- if rand == @state.length
                 rand = freeFields[rand]
+                @state[rand[0]][rand[1]][rand[2]] = num
+                @updateVisualNumber.apply(this, rand)
             else
                 alert("Game over!")
-            @state[rand[0]][rand[1]][rand[2]] = num
-            @updateVisualNumber.apply(this, rand)
+                @gameover = true
             return undefined
 
         updateVisualNumber: (i,j,k) ->
             visualNum = @numbers[i*@state.length*@state.length+j*@state.length+k]
             num = @state[i][j][k]
             visualNum.material = @numberMaterials.get(num)
-            @cubes[i*@state.length*@state.length+j*@state.length+k].material = (if num then @cubeMaterial else @cubeMaterialEmpty)
+            @cubes[i*@state.length*@state.length+j*@state.length+k].material = @getCubeMaterials(num)
             return undefined
 

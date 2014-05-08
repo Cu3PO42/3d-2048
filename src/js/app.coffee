@@ -9,6 +9,8 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
                 container: "#container",
                 cameraPos: [0,0,10],
                 rotationSpeed: 3,
+                rotateEndX: 0.5
+                rotateEndY : 0.3
                 lights: [
                     {
                         pos: [0,-5, 10],
@@ -27,7 +29,7 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
             @stats = new Stats()
             @container.append(@stats.domElement)
             @clock = new THREE.Clock()
-            @renderer = new THREE.WebGLRenderer()
+            @renderer = new THREE.WebGLRenderer(alpha: true)
             @container.append(@renderer.domElement)
             @camera = new THREE.PerspectiveCamera(options.cameraFocal, 1, options.cameraNear, options.cameraFar)
             @camera.position.set.apply(@camera.position, options.cameraPos)
@@ -49,13 +51,19 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
         loop: ->
             @stats.begin()
             delta = @clock.getDelta()
-            down = Keymap.isPressed("DOWN") or Keymap.isPressed("S")
-            up = Keymap.isPressed("UP") or Keymap.isPressed("W")
-            left = Keymap.isPressed("LEFT") or Keymap.isPressed("A")
-            right = Keymap.isPressed("RIGHT") or Keymap.isPressed("D")
-            rotateX = @options.rotationSpeed * delta * (down - up)
-            rotateY = @options.rotationSpeed * delta * (left - right)
-            @cube.rotate(rotateX,rotateY)
+            gameover = @cube.gameover
+            if gameover 
+                rotateX = @options.rotateEndX * delta
+                rotateY = @options.rotateEndY * delta
+                @cube.rotate(rotateX,rotateY)
+            else 
+                down = Keymap.isPressed("DOWN") or Keymap.isPressed("S")
+                up = Keymap.isPressed("UP") or Keymap.isPressed("W")
+                left = Keymap.isPressed("LEFT") or Keymap.isPressed("A")
+                right = Keymap.isPressed("RIGHT") or Keymap.isPressed("D")
+                rotateX = @options.rotationSpeed * delta * (down - up)
+                rotateY = @options.rotationSpeed * delta * (left - right)
+                @cube.rotate(rotateX,rotateY)
             @renderer.render(@scene,@camera)
             @stats.end()
             requestAnimationFrame(=> @loop())
