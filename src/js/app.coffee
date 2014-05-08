@@ -8,16 +8,16 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
                 cameraFar: 1000
                 container: "#container",
                 cameraPos: [0,0,10],
-                rotationSpeed: 1,
+                rotationSpeed: 3,
                 lights: [
                     {
                         pos: [0,-5, 10],
-                        color: 0xffffff,
+                        color: 0xff,
                         intensity: 0.2
                     }
                     {
                         pos: [0,5, 10],
-                        color: 0xffffff,
+                        color: 0xffff00,
                         intensity: 0.2
                     }
                 ]
@@ -49,8 +49,12 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
         loop: ->
             @stats.begin()
             delta = @clock.getDelta()
-            rotateX = @options.rotationSpeed * delta * (Keymap.isPressed("DOWN") - Keymap.isPressed("UP"))
-            rotateY = @options.rotationSpeed * delta * (Keymap.isPressed("LEFT") - Keymap.isPressed("RIGHT"))
+            down = Keymap.isPressed("DOWN") or Keymap.isPressed("S")
+            up = Keymap.isPressed("UP") or Keymap.isPressed("W")
+            left = Keymap.isPressed("LEFT") or Keymap.isPressed("A")
+            right = Keymap.isPressed("RIGHT") or Keymap.isPressed("D")
+            rotateX = @options.rotationSpeed * delta * (down - up)
+            rotateY = @options.rotationSpeed * delta * (left - right)
             @cube.rotate(rotateX,rotateY)
             @renderer.render(@scene,@camera)
             @stats.end()

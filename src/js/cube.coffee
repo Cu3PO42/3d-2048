@@ -8,7 +8,8 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                 numberSize : 0.8
                 cubeSpacing: 0.2
                 color: 0x87cefa
-                opacity: 0.5
+                opacity: 0.2
+                opacityEmpty: 0.05
                 cameraPos: new THREE.Vector3(-10,0,0)
             @options = options
             @state = []
@@ -25,7 +26,8 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
             @numbers = []
             numberGeometry = new THREE.PlaneGeometry(options.numberSize, options.numberSize)
             cubeGeometry = new THREE.BoxGeometry(options.cubeSize,options.cubeSize,options.cubeSize)
-            cubeMaterial = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacity, transparent: true)
+            @cubeMaterial = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacity, transparent: true)
+            @cubeMaterialEmpty = new THREE.MeshPhongMaterial(color: options.color, opacity: options.opacityEmpty, transparent: true)
             @numberMaterials = do ->
                 cache = {}
                 clearMaterial = new THREE.MeshPhongMaterial(map: renderText(0), transparent: true, opacity: 0, color: 0)
@@ -37,16 +39,18 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                     material = new THREE.MeshPhongMaterial(map: texture,alphaTest:0.5, color: 0xffffff, useScreenCoordinates: true)
                     cache[num] = material
                     return material
+            @cubes = []
             for i in [0...options.size]
                 for j in [0...options.size]
                     for k in [0...options.size]
-                        cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+                        cube = new THREE.Mesh(cubeGeometry, @cubeMaterialEmpty)
                         cube.position.set (i-1.5)*(options.cubeSize+options.cubeSpacing),
                             (j-1.5)*(options.cubeSize+options.cubeSpacing),
                             (k-1.5)*(options.cubeSize+options.cubeSpacing)
                         number = new THREE.Mesh(numberGeometry,@numberMaterials.get(0))
                         number.lookAt(options.cameraPos)
                         cube.add(number)
+                        @cubes.push(cube)
                         @numbers.push(number)
                         @mainScene.add(cube)
             cubeSize = options.size * options.cubeSize + (options.size-1) * options.cubeSpacing
@@ -60,70 +64,76 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
             tmp = new THREE.Mesh(planeGeometry, planeMaterial)
             tmp.position.set(0, 0, cubeSize/2)
             tmp.lookAt(origin)
-            planeMap[tmp.uuid] = 1
+            planeMap[tmp.uuid] = 0
             planes.push(tmp)
             planeScene.add(tmp)
             tmp = new THREE.Mesh(planeGeometry, planeMaterial)
             tmp.position.set(0, 0, -cubeSize/2)
             tmp.lookAt(origin)
-            planeMap[tmp.uuid] = 2
+            planeMap[tmp.uuid] = 1
             planes.push(tmp)
             planeScene.add(tmp)
             tmp = new THREE.Mesh(planeGeometry, planeMaterial)
             tmp.position.set(0, cubeSize/2, 0)
             tmp.lookAt(origin)
-            planeMap[tmp.uuid] = 3
+            planeMap[tmp.uuid] = 2
             planes.push(tmp)
             planeScene.add(tmp)
             tmp = new THREE.Mesh(planeGeometry, planeMaterial)
             tmp.position.set(0, -cubeSize/2, 0)
             tmp.lookAt(origin)
-            planeMap[tmp.uuid] = 4
+            planeMap[tmp.uuid] = 3
             planes.push(tmp)
             planeScene.add(tmp)
             tmp = new THREE.Mesh(planeGeometry, planeMaterial)
             tmp.position.set(cubeSize/2, 0, 0)
             tmp.lookAt(origin)
-            planeMap[tmp.uuid] = 5
+            planeMap[tmp.uuid] = 4
             planes.push(tmp)
             planeScene.add(tmp)
             tmp = new THREE.Mesh(planeGeometry, planeMaterial)
             tmp.position.set(-cubeSize/2, 0, 0)
-            planeMap[tmp.uuid] = 6
+            planeMap[tmp.uuid] = 5
             tmp.lookAt(origin)
             planes.push(tmp)
             planeScene.add(tmp)
             @addNumber()
             @addNumber()
+            @addNumber()
+            @addNumber()
             projector = new THREE.Projector()
-            $(document).on "mouseup", (e) =>
-                vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 )
+            $(document).on "mousedown", (e) =>
+                vector = new THREE.Vector3( ( e.pageX / window.innerWidth ) * 2 - 1, - ( e.pageY / window.innerHeight ) * 2 + 1, 0.5 )
                 projector.unprojectVector(vector, options.camera)
                 raycaster = new THREE.Raycaster(options.cameraPos, vector.sub(options.cameraPos).normalize())
                 intersects = raycaster.intersectObjects(planes)
-                if intersects
-                    @next(planeMap[intersects[0].object.uuid])
+                if intersects.length
+                    dir = planeMap[intersects[0].object.uuid]
+                    dir ^= 1 if e.which == 3
+                    @next(dir)
+            $(document).on "contextmenu", (e) ->
+                e.preventDefault()
 
 
         next: (dir) ->
             state = @state
             iterators =
-                1: (row, col, depth) ->
+                0: (row, col, depth) ->
                     get: -> state[row][col][depth]
                     set: (val) -> state[row][col][depth] = val
-                2: (row, col, depth) ->
+                1: (row, col, depth) ->
                     get: -> state[row][col][state.length - 1 - depth]
                     set: (val) -> state[row][col][state.length - 1 - depth] = val
-                3: (row, col, depth) ->
+                2: (row, col, depth) ->
                     get: -> state[row][depth][col]
                     set: (val) -> state[row][depth][col] = val
-                4: (row, col, depth) ->
+                3: (row, col, depth) ->
                     get: -> state[row][state.length - 1 - depth][col]
                     set: (val) -> state[row][state.length - 1 - depth][col] = val
-                5: (row, col, depth) ->
+                4: (row, col, depth) ->
                     get: -> state[depth][col][row]
                     set: (val) -> state[depth][col][row] = val
-                6: (row, col, depth) ->
+                5: (row, col, depth) ->
                     get: -> state[state.length - 1 - depth][col][row]
                     set: (val) -> state[state.length - 1 - depth][col][row] = val
             iter = iterators[dir]
@@ -152,6 +162,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                 for j in [0...@state.length]
                     for k in [0...@state.length]
                         @updateVisualNumber(i,j,k)
+            @addNumber()
             @addNumber()
             return undefined
 
@@ -188,6 +199,8 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
 
         updateVisualNumber: (i,j,k) ->
             visualNum = @numbers[i*@state.length*@state.length+j*@state.length+k]
-            visualNum.material = @numberMaterials.get(@state[i][j][k])
+            num = @state[i][j][k]
+            visualNum.material = @numberMaterials.get(num)
+            @cubes[i*@state.length*@state.length+j*@state.length+k].material = (if num then @cubeMaterial else @cubeMaterialEmpty)
             return undefined
 
