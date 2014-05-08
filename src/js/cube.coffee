@@ -11,6 +11,11 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                 opacity: 0.2
                 opacityEmpty: 0.05
                 cameraPos: new THREE.Vector3(-10,0,0)
+                numberColors: 
+                    "2": "red"
+                    "4": "blue"
+                    "8": "green"
+                    "16": "yellow"
             @options = options
             @state = []
             for i in [1..options.size]
@@ -35,7 +40,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                     return clearMaterial unless num
                     num = ""+num
                     return cache[num] if num of cache
-                    texture = renderText(num)
+                    texture = renderText(num,{color:options.numberColors[num]})
                     material = new THREE.MeshPhongMaterial(map: texture,alphaTest:0.5, color: 0xffffff, useScreenCoordinates: true)
                     cache[num] = material
                     return material
