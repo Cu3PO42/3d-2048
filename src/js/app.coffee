@@ -55,15 +55,15 @@ define ["cube", "keymap", "three","stats", "jquery", "underscore"], (Cube, Keyma
             if gameover 
                 rotateX = @options.rotateEndX * delta
                 rotateY = @options.rotateEndY * delta
-                @cube.rotate(rotateX,rotateY)
-            else 
+            else
                 down = Keymap.isPressed("DOWN") or Keymap.isPressed("S")
                 up = Keymap.isPressed("UP") or Keymap.isPressed("W")
                 left = Keymap.isPressed("LEFT") or Keymap.isPressed("A")
                 right = Keymap.isPressed("RIGHT") or Keymap.isPressed("D")
                 rotateX = @options.rotationSpeed * delta * (down - up)
                 rotateY = @options.rotationSpeed * delta * (left - right)
-                @cube.rotate(rotateX,rotateY)
+            @cube.rotate(rotateX,rotateY)
+            @cube.highlightCube()
             @renderer.render(@scene,@camera)
             @stats.end()
             requestAnimationFrame(=> @loop())

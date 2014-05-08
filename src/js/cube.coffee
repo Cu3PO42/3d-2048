@@ -10,6 +10,7 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                 color: 0x87cefa
                 opacity: 0.2
                 opacityEmpty: 0.05
+                opacityHighlight: 0.5
                 cameraPos: new THREE.Vector3(-10,0,0)
                 colors:
                     "2": 0xE8BF19
@@ -123,10 +124,14 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
             @addNumber()
             @addNumber()
             @addNumber()
-            projector = new THREE.Projector()
+            @projector = new THREE.Projector()
+            @prevMaterial = @getCubeMaterials(0)
+            @prevOpacity = options.opacityEmpty
+            @mousePos = { x: 0, y: 0 }
+            mousePos = @mousePos
             $(document).on "mousedown", (e) =>
                 vector = new THREE.Vector3( ( e.pageX / window.innerWidth ) * 2 - 1, - ( e.pageY / window.innerHeight ) * 2 + 1, 0.5 )
-                projector.unprojectVector(vector, options.camera)
+                @projector.unprojectVector(vector, options.camera)
                 raycaster = new THREE.Raycaster(options.cameraPos, vector.sub(options.cameraPos).normalize())
                 intersects = raycaster.intersectObjects(planes)
                 if intersects.length
@@ -135,7 +140,9 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
                     @next(dir)
             $(document).on "contextmenu", (e) ->
                 e.preventDefault()
-
+            $(document).on "mousemove", (e) ->
+                mousePos.x = e.pageX
+                mousePos.y = e.pageY
 
         next: (dir) ->
             return if @gameover
@@ -232,3 +239,15 @@ define ["text_renderer", "three", "underscore", "jquery"], (renderText, THREE, _
             @cubes[i*@state.length*@state.length+j*@state.length+k].material = @getCubeMaterials(num)
             return undefined
 
+        highlightCube: ->
+            vector = new THREE.Vector3( ( @mousePos.x / window.innerWidth ) * 2 - 1, - ( @mousePos.y / window.innerHeight ) * 2 + 1, 0.5 )
+            @projector.unprojectVector(vector, @options.camera)
+            raycaster = new THREE.Raycaster(@options.cameraPos, vector.sub(@options.cameraPos).normalize())
+            intersects = raycaster.intersectObjects(@cubes)
+            @prevMaterial.opacity = @prevOpacity
+            for obj in intersects
+                if obj.object.material != @getCubeMaterials(0)
+                    @prevOpacity = obj.object.material.opacity
+                    @prevMaterial = obj.object.material
+                    obj.object.material.opacity = @options.opacityHighlight
+                    break
